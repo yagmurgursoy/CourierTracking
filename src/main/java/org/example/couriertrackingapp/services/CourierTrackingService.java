@@ -6,6 +6,8 @@ import org.example.couriertrackingapp.domain.dtos.CourierLocationRequest;
 import org.example.couriertrackingapp.domain.entities.CourierLocation;
 import org.example.couriertrackingapp.domain.entities.Store;
 import org.example.couriertrackingapp.mappers.CourierMapper;
+import org.example.couriertrackingapp.strategies.DistanceStrategy;
+import org.example.couriertrackingapp.strategies.HaversineDistanceStrategy;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
@@ -25,7 +27,7 @@ public class CourierTrackingService {
     private final List<CourierLocation> courierLocations = Collections.synchronizedList(new ArrayList<>());
     private final CourierMapper courierMapper;
     private final ConcurrentHashMap<UUID, LocalDateTime> recentEntriesInRadius = new ConcurrentHashMap<>();
-
+    private final DistanceStrategy distanceStrategy = new HaversineDistanceStrategy();
 
     public Double getTotalTravelDistance(UUID courierId) {
         if (courierLocations.size() < 2) {
@@ -38,7 +40,7 @@ public class CourierTrackingService {
                 .toList();
 
         return IntStream.range(0, sortedLocations.size() - 1)
-                .mapToDouble(i -> haversine(
+                .mapToDouble(i -> distanceStrategy.calculate(
                         sortedLocations.get(i).getLatitude(),
                         sortedLocations.get(i).getLongitude(),
                         sortedLocations.get(i + 1).getLatitude(),
@@ -76,19 +78,8 @@ public class CourierTrackingService {
     }
 
     private boolean isWithinRadius(double lat1, double lon1, double lat2, double lon2) {
-        double distance = haversine(lat1, lon1, lat2, lon2);
+        double distance = distanceStrategy.calculate(lat1, lon1, lat2, lon2);
         return distance <= 100;
-    }
-
-    private double haversine(double lat1, double lon1, double lat2, double lon2) {
-        final int EARTH_RADIUS = 6371000; // in meters
-        double dLat = Math.toRadians(lat2 - lat1);
-        double dLon = Math.toRadians(lon2 - lon1);
-        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
-                        Math.sin(dLon / 2) * Math.sin(dLon / 2);
-        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return EARTH_RADIUS * c;
     }
 
     public void logStoreEntry(CourierLocation courierLocation, Store store) {
