@@ -1,35 +1,24 @@
 package org.example.couriertrackingapp;
 
-import org.example.couriertrackingapp.mappers.StoreMapper;
 import org.example.couriertrackingapp.domain.dtos.CourierLocationRequest;
-import org.example.couriertrackingapp.domain.dtos.StoreRequest;
 import org.example.couriertrackingapp.domain.entities.CourierLocation;
-import org.example.couriertrackingapp.domain.entities.Store;
 import org.example.couriertrackingapp.mappers.CourierMapper;
 import org.example.couriertrackingapp.services.CourierTrackingService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 
-import java.io.IOException;
-import java.lang.reflect.Method;
-import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 public class CourierTrackingServiceTest {
-    @Mock
+    @Spy
     private CourierMapper courierMapper;
-
-    @Mock
-    private StoreMapper storeMapper;
 
     @InjectMocks
     private CourierTrackingService courierTrackingService;
@@ -114,20 +103,17 @@ public class CourierTrackingServiceTest {
         courierLocationRequest.setLatitude(40.9923307);
         courierLocationRequest.setLongitude(29.1244229);
 
-        CourierMapper mockCourierMapper = mock(CourierMapper.class);
         CourierLocation courierLocation = new CourierLocation();
         courierLocation.setCourierId(courierId);
         courierLocation.setLatitude(40.9923307);
         courierLocation.setLongitude(29.1244229);
         courierLocation.setTimestamp(LocalDateTime.now());
 
-        when(mockCourierMapper.convertToEntity(any(CourierLocationRequest.class))).thenReturn(courierLocation);
+        when(courierMapper.convertToEntity(any(CourierLocationRequest.class))).thenReturn(courierLocation);
 
-        CourierTrackingService service = spy(new CourierTrackingService(mockCourierMapper, null));
-        service.saveCourierLocation(courierLocationRequest);
+        courierTrackingService.saveCourierLocation(courierLocationRequest);
 
-        verify(mockCourierMapper, times(1)).convertToEntity(courierLocationRequest);
-        verify(service, times(1)).saveCourierLocation(courierLocationRequest);
+        verify(courierMapper, times(1)).convertToEntity(courierLocationRequest);
     }
 
 }
