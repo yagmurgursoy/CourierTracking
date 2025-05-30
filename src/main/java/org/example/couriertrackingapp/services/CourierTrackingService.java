@@ -1,33 +1,36 @@
 package org.example.couriertrackingapp.services;
 
-import com.fasterxml.jackson.core.type.TypeReference;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.example.couriertrackingapp.domain.dtos.CourierLocationRequest;
 import org.example.couriertrackingapp.domain.entities.CourierLocation;
 import org.example.couriertrackingapp.domain.entities.Store;
+import org.example.couriertrackingapp.factories.StoreProviderFactory;
 import org.example.couriertrackingapp.mappers.CourierMapper;
 import org.example.couriertrackingapp.strategies.DistanceStrategy;
 import org.example.couriertrackingapp.strategies.HaversineDistanceStrategy;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.IntStream;
 
-import static org.example.couriertrackingapp.utils.FileUtils.readListFromJson;
-
 @Service
 @RequiredArgsConstructor
 public class CourierTrackingService {
-    private final List<Store> stores = getStores();
+    private List<Store> stores;
     private final List<CourierLocation> courierLocations = Collections.synchronizedList(new ArrayList<>());
     private final CourierMapper courierMapper;
     private final ConcurrentHashMap<UUID, LocalDateTime> recentEntriesInRadius = new ConcurrentHashMap<>();
     private final DistanceStrategy distanceStrategy = new HaversineDistanceStrategy();
+    private final StoreProviderFactory storeProviderFactory;
+
+    @PostConstruct
+    public void initStores() {
+        this.stores = storeProviderFactory.getProvider("fileStoreProvider").getStores();
+    }
 
     public Double getTotalTravelDistance(UUID courierId) {
         if (courierLocations.size() < 2) {
@@ -88,14 +91,5 @@ public class CourierTrackingService {
                 );
     }
 
-    private List<Store> getStores() {
-        try {
-            File file = new ClassPathResource("files/stores.json").getFile();
-            return readListFromJson(file, new TypeReference<>() {});
-        }
-        catch (Exception e){
-            e.printStackTrace();
-            return null;
-        }
-    }
+
 }

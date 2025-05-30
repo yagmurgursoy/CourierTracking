@@ -2,15 +2,20 @@ package org.example.couriertrackingapp;
 
 import org.example.couriertrackingapp.domain.dtos.CourierLocationRequest;
 import org.example.couriertrackingapp.domain.entities.CourierLocation;
+import org.example.couriertrackingapp.domain.entities.Store;
+import org.example.couriertrackingapp.factories.StoreProviderFactory;
+import org.example.couriertrackingapp.factories.providers.StoreProvider;
 import org.example.couriertrackingapp.mappers.CourierMapper;
 import org.example.couriertrackingapp.services.CourierTrackingService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -23,9 +28,26 @@ public class CourierTrackingServiceTest {
     @InjectMocks
     private CourierTrackingService courierTrackingService;
 
+
+    @Mock
+    private StoreProviderFactory storeProviderFactory;
+
+    @Mock
+    private StoreProvider storeProvider;
+
+
     @BeforeEach
     public void setup() {
         MockitoAnnotations.openMocks(this);
+
+        List<Store> mockStores = List.of(
+                new Store("Mock Store", 40.7128, -74.0060)
+        );
+
+        when(storeProviderFactory.getProvider("fileStoreProvider")).thenReturn(storeProvider);
+        when(storeProvider.getStores()).thenReturn(mockStores);
+
+        courierTrackingService.initStores();
     }
 
     @Test
