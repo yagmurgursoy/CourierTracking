@@ -58,7 +58,7 @@ and then you can get total distance for specific couirer below endpoint
 - Java 21+
 - Maven 3.8+
 
-### Clone and Build
+### Clone,Build and Test
 
 ```bash
 git clone https://github.com/yagmurgursoy/CourierTracking/tree/master
